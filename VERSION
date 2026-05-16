@@ -1,0 +1,48 @@
+VERSION=202605151200
+Library sort/group, print fix, darker modals, internal notes prompt
+
+CURRENT VERSION: 202605151200
+
+═══════════════════════════════════════════════
+NEW IN THIS VERSION (2026-05-15)
+═══════════════════════════════════════════════
+
+📚 LIBRARY IMPROVEMENTS
+   - Sort by date (newest/oldest toggle)
+   - Group by client (alphabetical, with count badge)
+   - Search now live-filters as you type (was broken before)
+
+🖨️ PRINT FIX (iOS / iPhone)
+   - Burger menu no longer appears on iOS prints/PDF
+   - Menu overlay also hidden on print
+
+🎨 MODAL OVERLAY
+   - Darker background (0.72 opacity, was 0.5)
+   - Stronger blur (6px, was 3px) with -webkit- prefix for Safari
+
+🔒 INTERNAL NOTES PROMPT
+   - When saving an offer with empty internal notes,
+     a dialog asks to add notes (cost, margin, etc.)
+   - "Αποθήκευση" saves notes and proceeds
+   - "Παράλειψη" skips and saves without notes
+
+═══════════════════════════════════════════════
+ALL FEATURES WORKING
+═══════════════════════════════════════════════
+
+✅ Library Sort & Group by Client (NEW!)
+✅ Internal Notes Prompt on Save (NEW!)
+✅ Burger Menu Print Fix for iOS (NEW!)
+✅ Burger Menu for Dynamic Island iPhones
+✅ Drag & Drop Item Reordering
+✅ Checkboxes for Signatory/Title
+✅ Quick Add with Smart Parsing
+✅ GitHub Offer Library Sync
+✅ Night Mode
+✅ Terminal-Style Version Display
+
+═══════════════════════════════════════════════
+
+Version: 202605151200
+Status: ✅ FULLY WORKING
+Date: 2026-05-15

@@ -1,0 +1,10 @@
+# Archives
+*.zip
+
+# Local test folders
+outputs/
+sub/
+sub2-test/
+
+# macOS
+.DS_Store

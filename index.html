@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="el">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Δημιουργία Προσφοράς | Offer Generator</title>
+    <meta name="description" content="Επαγγελματική δημιουργία προσφορών για προϊόντα τεχνολογίας">
+    <!-- See VERSION file for current version info -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=202605151200">
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <div class="login-logo">
+                <svg width="48" height="48" viewBox="0 0 32 32" fill="none">
+                    <rect width="32" height="32" rx="7" fill="url(#logoGrad3)" />
+                    <path d="M8 12h16M8 16h12M8 20h14M22 10l4 6-4 6" stroke="#fff" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                    <defs>
+                        <linearGradient id="logoGrad3" x1="0" y1="0" x2="32" y2="32">
+                            <stop stop-color="#1a2778" />
+                            <stop offset="1" stop-color="#76689a" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <h1>Offer Generator</h1>
+            </div>
+            <div style="text-align:center;margin-bottom:1rem;color:var(--text-muted);font-size:0.85rem">
+                🔐 Login with GitHub Token
+            </div>
+            <div class="form-group">
+                <label>GitHub Username</label>
+                <input type="text" id="loginUsername" placeholder="your-github-username">
+            </div>
+            <div class="form-group">
+                <label>Personal Access Token</label>
+                <input type="password" id="loginPassword" placeholder="ghp_xxxxxxxxxxxxx">
+                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem">
+                    Generate at: <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--primary)">github.com/settings/tokens/new</a>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="btnLogin" style="width:100%;margin-top:1rem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:0.3rem">
+                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" />
+                </svg>
+                Login with GitHub
+            </button>
+            <div class="login-hint" style="margin-top:1rem">
+                <strong>First time?</strong><br>
+                1. Go to <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--primary)">GitHub Tokens</a><br>
+                2. Click "Generate new token (classic)"<br>
+                3. Name: "Offer Generator"<br>
+                4. Select scope: <strong>repo</strong> (full control)<br>
+                5. Set expiration: <strong>No expiration</strong> (or 90 days)<br>
+                6. Click "Generate token"<br>
+                7. Copy token and paste above<br>
+                <br>
+                <strong style="color:#f59e0b;">⚠️ Token rejected?</strong> Generate a fresh one!
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="appContainer" style="display:none">
+        <!-- Burger Menu Button (for mobile) -->
+        <button class="burger-menu" id="burgerMenu" aria-label="Menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        
+        <!-- Menu Overlay (mobile) -->
+        <div class="menu-overlay" id="menuOverlay"></div>
+        
+        <!-- Header -->
+        <header class="app-header" id="appHeader">
+            <div class="header-content">
+                <div class="logo-area">
+                    <div class="logo-icon">
+                        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+                            <rect width="32" height="32" rx="7" fill="url(#logoGrad2)" />
+                            <path d="M8 12h16M8 16h12M8 20h14M22 10l4 6-4 6" stroke="#fff" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                            <defs>
+                                <linearGradient id="logoGrad2" x1="0" y1="0" x2="32" y2="32">
+                                    <stop stop-color="#1a2778" />
+                                    <stop offset="1" stop-color="#76689a" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1>Offer Generator</h1>
+                        <p class="subtitle">ΔΗΜΙΟΥΡΓΙΑ ΠΡΟΣΦΟΡΩΝ <span id="versionDisplay" class="version-terminal">v202605151200</span></p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <span class="user-badge" id="userBadge"><span class="user-icon">👤</span><span class="user-name">admin</span></span>
+                    <button class="btn btn-ghost" id="btnLibrary" title="Βιβλιοθήκη" data-icon="📚">📚 Βιβλιοθήκη</button>
+                    <button class="btn btn-ghost" id="btnNewOffer" title="Νέα Προσφορά" data-icon="＋">＋ Νέα</button>
+                    <button class="btn btn-ghost" id="btnManageUsers" title="Διαχείριση Χρηστών" style="display:none" data-icon="👥">👥 Χρήστες</button>
+                    <button class="btn btn-primary" id="btnPrint" title="Εκτύπωση / PDF" data-icon="📄">📄 PDF</button>
+                    <button class="btn btn-ghost btn-logout" id="btnLogout" title="Αποσύνδεση" data-icon="🚪">🚪</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Left Panel: Form -->
+            <aside class="form-panel">
+                <div class="panel-scroll">
+                    <!-- Company Settings (Collapsible, saved permanently) -->
+                    <section class="form-section">
+                        <div class="section-header collapsed" data-toggle="companySection">
+                            <h2>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                                    <polyline points="9 22 9 12 15 12 15 22" />
+                                </svg>
+                                Στοιχεία Εταιρείας
+                                <span class="company-saved-badge" id="companySavedBadge">✅ Αποθηκευμένα</span>
+                            </h2>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                        <div class="section-body" id="companySection">
+                            <div class="form-group">
+                                <label for="companyLogo">Logo URL</label>
+                                <input type="url" id="companyLogo" placeholder="https://example.com/logo.png">
+                                <div class="img-preview-small" id="logoPreview">
+                                    <img id="logoPreviewImg" src="" alt="Logo">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="companyName">Επωνυμία</label>
+                                <input type="text" id="companyName" placeholder="π.χ. MacWorks E.E.">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="companyPhone">Τηλέφωνο</label>
+                                    <input type="text" id="companyPhone" placeholder="210 1234567">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyEmail">Email</label>
+                                    <input type="email" id="companyEmail" placeholder="info@company.gr">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="companyAddress">Διεύθυνση</label>
+                                <input type="text" id="companyAddress" placeholder="Ερμού 25, Αθήνα">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="companyAFM">ΑΦΜ</label>
+                                    <input type="text" id="companyAFM" placeholder="123456789">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyDOY">ΔΟΥ</label>
+                                    <input type="text" id="companyDOY" placeholder="ΦΑΕ ΑΘΗΝΩΝ">
+                                </div>
+                                <div class="form-group">
+                                    <label for="companyGEMI">ΓΕΜΗ</label>
+                                    <input type="text" id="companyGEMI" placeholder="123456789">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="checkbox" id="enableSignatory" checked>
+                                    Υπογράφων
+                                </label>
+                                <input type="text" id="companySignatory" placeholder="Γιώργος Παπαδόπουλος">
+                            </div>
+                            <div class="form-group">
+                                <label style="display:flex;align-items:center;gap:0.5rem;">
+                                    <input type="checkbox" id="enableTitle" checked>
+                                    Τίτλος
+                                </label>
+                                <input type="text" id="companyTitle" placeholder="Διευθυντής Πωλήσεων">
+                            </div>
+                            <div class="form-group">
+                                <label for="closingMessage">Κλείσιμο (Σελ. 2)</label>
+                                <textarea id="closingMessage" rows="2" placeholder="Στην διάθεσή σας.&#10;Με εκτίμηση για την..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="page2Notes">Παρατηρήσεις (Σελ. 2)</label>
+                                <textarea id="page2Notes" rows="4" placeholder="Οι τιμές περιλαμβάνουν Φ.Π.Α. {vat}%&#10;Ο χρόνος διαθεσιμότητας υπόκειται στη διαθεσιμότητα του προμηθευτή.&#10;Η προσφορά ισχύει {validity} εργάσιμες ημέρες.&#10;Οι τιμές ενδέχεται να μεταβληθούν."></textarea>
+                                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem">
+                                    💡 Χρήση: {vat} για ΦΠΑ%, {validity} για ημέρες ισχύος
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="introTemplates">Πρότυπα Εισαγωγικού Κειμένου</label>
+                                <textarea id="introTemplates" rows="6" placeholder="apple|αγορά|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για την αγορά Apple προϊόντων.&#10;service|επισκευή|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για την επισκευή/αναβάθμιση της συσκευής σας.&#10;pc|αγορά|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για την αγορά υπολογιστή."></textarea>
+                                <div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem">
+                                    💡 Μορφή: category|action|text (ένα ανά γραμμή)
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-primary" id="btnSaveCompany" style="width:100%">💾 Αποθήκευση
+                                Στοιχείων</button>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem">
+                                <button class="btn btn-sm" id="btnExportSettings" style="background:var(--success);color:white">
+                                    📤 Export JSON
+                                </button>
+                                <button class="btn btn-sm" id="btnImportSettings" style="background:var(--info);color:white">
+                                    📥 Import JSON
+                                </button>
+                            </div>
+                            <button class="btn btn-sm" id="btnResetToDefaults" style="width:100%;margin-top:0.5rem;background:#f59e0b;color:white">
+                                🔄 Reset to company-settings.json
+                            </button>
+                            <input type="file" id="importSettingsFile" accept=".json" style="display:none">
+                        </div>
+                    </section>
+
+                    <!-- Client Details -->
+                    <section class="form-section">
+                        <div class="section-header" data-toggle="clientSection">
+                            <h2>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                Στοιχεία Πελάτη
+                            </h2>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                        <div class="section-body open" id="clientSection">
+                            <div class="form-group">
+                                <label for="clientName">Ονοματεπώνυμο / Επωνυμία <span class="required">*</span></label>
+                                <input type="text" id="clientName" placeholder="Γιώργος Παπαδόπουλος" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientCompany">Εταιρεία</label>
+                                <input type="text" id="clientCompany" list="savedClients" placeholder="Optionalis Α.Ε.">
+                                <datalist id="savedClients"></datalist>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientPhone">Τηλέφωνο</label>
+                                    <input type="text" id="clientPhone" placeholder="6971234567">
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientEmail">Email</label>
+                                    <input type="email" id="clientEmail" placeholder="client@email.com">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="clientAddress">Διεύθυνση</label>
+                                <input type="text" id="clientAddress" placeholder="Σταδίου 10, Αθήνα">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="clientAFM">ΑΦΜ</label>
+                                    <input type="text" id="clientAFM" placeholder="987654321">
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientDOY">ΔΟΥ</label>
+                                    <input type="text" id="clientDOY" placeholder="Β' Αθηνών">
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Offer Details -->
+                    <section class="form-section">
+                        <div class="section-header" data-toggle="offerSection">
+                            <h2>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                                    <line x1="8" y1="21" x2="16" y2="21" />
+                                    <line x1="12" y1="17" x2="12" y2="21" />
+                                </svg>
+                                Στοιχεία Προσφοράς
+                            </h2>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                        <div class="section-body open" id="offerSection">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="offerNumber">Αρ. Προσφοράς</label>
+                                    <input type="text" id="offerNumber" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label for="offerDate">Ημερομηνία</label>
+                                    <input type="date" id="offerDate">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="offerValidity">Ισχύς (ημέρες)</label>
+                                    <input type="number" id="offerValidity" value="7" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="vatRate">ΦΠΑ %</label>
+                                    <input type="number" id="vatRate" value="24" min="0" max="100">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="paymentMethod">Τρόπος Πληρωμής</label>
+                                <select id="paymentMethod">
+                                    <option value="Τραπεζική Κατάθεση">Τραπεζική Κατάθεση</option>
+                                    <option value="Μετρητά">Μετρητά</option>
+                                    <option value="Κάρτα">Πιστωτική / Χρεωστική Κάρτα</option>
+                                    <option value="Δόσεις">Δόσεις</option>
+                                    <option value="Αντικαταβολή">Αντικαταβολή</option>
+                                    <option value="__custom__">+ Προσθήκη νέου...</option>
+                                </select>
+                                <div class="custom-input-row" id="customPaymentRow">
+                                    <input type="text" id="customPaymentInput" placeholder="Νέος τρόπος πληρωμής">
+                                    <button class="btn-save-custom" onclick="saveCustomPayment()">✓</button>
+                                    <button class="btn-cancel-custom" onclick="cancelCustomPayment()">✕</button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="introTemplateSelect">Επιλογή Προτύπου</label>
+                                <select id="introTemplateSelect" onchange="applyIntroTemplate()">
+                                    <option value="">-- Επιλέξτε πρότυπο --</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="introText">Εισαγωγικό Κείμενο</label>
+                                    <textarea id="introText" rows="3"
+                                        placeholder="Κατόπιν συνεννόησης μας και έχοντας λάβει γνώση των αναγκών σας, παραθέτω την οικονομική μου προσφορά για..."></textarea>
+                                    <div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem">
+                                        💡 Χρήση: {action} για "αγορά/επισκευή/αναβάθμιση", {category} για κατηγορία προϊόντος
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="introTextSize">Μέγεθος</label>
+                                    <select id="introTextSize" onchange="updatePreview()">
+                                        <option value="tiny">Tiny (8pt)</option>
+                                        <option value="small">Small (9pt)</option>
+                                        <option value="normal" selected>Normal (10pt)</option>
+                                        <option value="large">Large (11pt)</option>
+                                        <option value="huge">Huge (12pt)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <!-- Visibility Toggles -->
+                            <div class="form-group" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border-color);">
+                                <label style="margin-bottom:0.8rem;display:block;font-weight:600;">Εμφάνιση στο PDF</label>
+                                <div style="display:flex;flex-direction:column;gap:0.5rem;">
+                                    <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;">
+                                        <input type="checkbox" id="showTotalsSection" checked onchange="updatePreview()">
+                                        <span style="font-weight:600;">Εμφάνιση Συνόλου (Καθαρή Αξία + ΦΠΑ + Σύνολο)</span>
+                                    </label>
+                                    <div id="totalsSubOptions" style="margin-left:1.5rem;display:flex;flex-direction:column;gap:0.4rem;">
+                                        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;">
+                                            <input type="checkbox" id="showNetPrice" checked onchange="updatePreview()">
+                                            <span>α) Καθαρή Αξία (χωρίς ΦΠΑ)</span>
+                                        </label>
+                                        <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;">
+                                            <input type="checkbox" id="showVAT" checked onchange="updatePreview()">
+                                            <span>β) ΦΠΑ</span>
+                                        </label>
+                                    </div>
+                                    <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;">
+                                        <input type="checkbox" id="showItemDetails" checked onchange="updatePreview()">
+                                        <span>γ) Λεπτομέρειες Προϊόντων (specs, εγγύηση)</span>
+                                    </label>
+                                    <label style="display:flex;align-items:center;gap:0.5rem;font-weight:400;cursor:pointer;">
+                                        <input type="checkbox" id="showVATPerItem" checked onchange="updatePreview()">
+                                        <span>δ) Ένδειξη ΦΠΑ κάτω από κάθε προϊόν</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Products / Items -->
+                    <section class="form-section">
+                        <div class="section-header" data-toggle="itemsSection">
+                            <h2>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="1" y="3" width="15" height="13" />
+                                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                                    <circle cx="5.5" cy="18.5" r="2.5" />
+                                    <circle cx="18.5" cy="18.5" r="2.5" />
+                                </svg>
+                                Προϊόντα / Υπηρεσίες
+                            </h2>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                        <div class="section-body open" id="itemsSection">
+                            <div id="itemsList"></div>
+                            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                                <button class="btn btn-add-item" id="btnAddItem">＋ Προσθήκη Προϊόντος / Υπηρεσίας</button>
+                                <button class="btn btn-primary" id="btnQuickAdd" style="background:#f59e0b;">📋 Quick Add</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Internal Notes (NOT visible in PDF) -->
+                    <section class="form-section internal-notes-section">
+                        <div class="section-header" data-toggle="internalNotesSection">
+                            <h2>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                </svg>
+                                🔒 Εσωτερικές Σημειώσεις
+                            </h2>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                        <div class="section-body open" id="internalNotesSection">
+                            <textarea id="internalNotes" class="internal-notes-area" rows="8"
+                                placeholder=">>> Σημειώσεις για εσωτερική χρήση (κόστος αγοράς, margin, κλπ)..."></textarea>
+                            <div class="internal-notes-hint">🔒 ΔΕΝ εμφανίζονται στο PDF / Εκτύπωση</div>
+                        </div>
+                    </section>
+
+                    <!-- Offer Notes (visible in PDF) -->
+                    <section class="form-section">
+                        <div class="section-header" data-toggle="notesSection">
+                            <h2>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                </svg>
+                                Σημειώσεις Προσφοράς
+                            </h2>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                        <div class="section-body" id="notesSection">
+                            <div class="form-group">
+                                <textarea id="offerNotes" rows="2"
+                                    placeholder="Σημειώσεις που θα εμφανιστούν στην προσφορά..."></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- GitHub Sync -->
+                    <section class="form-section">
+                        <div class="section-header" data-toggle="githubSection">
+                            <h2>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22" />
+                                </svg>
+                                ☁️ GitHub Sync
+                            </h2>
+                            <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </div>
+                        <div class="section-body" id="githubSection">
+                            <button class="btn btn-sm btn-ghost" id="btnGitHubSetup"
+                                style="width:100%;margin-bottom:0.4rem">⚙️ Ρυθμίσεις GitHub</button>
+                            <div class="form-row">
+                                <button class="btn btn-sm btn-ghost" id="btnGitHubPull" style="flex:1">⬇️ Pull</button>
+                                <button class="btn btn-sm btn-ghost" id="btnGitHubPush" style="flex:1">⬆️ Push</button>
+                            </div>
+                            <div id="syncStatus"
+                                style="font-size:0.68rem;color:var(--text-muted);margin-top:0.4rem;display:none"></div>
+                        </div>
+                    </section>
+
+                    <!-- Save / Backup -->
+                    <div style="padding:0.4rem 0;display:flex;gap:0.4rem">
+                        <button class="btn btn-primary" id="btnSaveOffer" style="flex:1">💾 Αποθήκευση</button>
+                        <button class="btn btn-ghost" id="btnExportBackup" style="flex:1">📦 Backup</button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Preview -->
+            <section class="preview-panel">
+                <div class="preview-toolbar">
+                    <span class="preview-label">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        Προεπισκόπηση A4
+                    </span>
+                    <div style="display:flex;gap:0.3rem;">
+                        <button class="btn btn-sm btn-ghost" id="btnNightMode" title="Night Mode - Dark background">
+                            🌙 Night
+                        </button>
+                        <button class="btn btn-sm btn-ghost" id="btnCompactView" title="Compact View - Reduce whitespace">
+                            📐 Compact
+                        </button>
+                    </div>
+                </div>
+                <div class="preview-scroll">
+
+                    <!-- Single document container for proper pagination -->
+                    <div class="offer-document" id="offerDocument">
+                        
+                        <!-- ========== PAGE 1 ========== -->
+                        <div class="offer-page-1">
+                            <!-- Header -->
+                            <div class="pdf-header">
+                            <div class="pdf-header-logo" id="previewCompanyLogo">
+                                <img id="previewLogoImg" src="" alt="Logo">
+                            </div>
+                            <div class="pdf-header-right" id="previewCompanyDetails"></div>
+                        </div>
+
+                        <div class="pdf-header-spacer"></div>
+
+                        <!-- Title -->
+                        <div class="pdf-title">ΟΙΚΟΝΟΜΙΚΗ ΠΡΟΣΦΟΡΑ</div>
+                        <div class="pdf-subtitle" id="previewOfferNumber"></div>
+                        <div class="pdf-title-separator"></div>
+
+                        <!-- Recipient & Date -->
+                        <div class="pdf-recipient-row">
+                            <div class="pdf-recipient">
+                                <span class="label">Προς:</span>
+                                <strong id="previewClientName">[Πελάτης]</strong>
+                            </div>
+                            <div class="pdf-date">
+                                <span id="previewCityDate"></span>
+                            </div>
+                        </div>
+
+                        <!-- Intro -->
+                        <div class="pdf-intro" id="previewIntro" style="display:none"></div>
+
+                        <!-- Client Details -->
+                        <div class="offer-client-section" id="previewClientDetailsSection" style="display:none">
+                            <div class="offer-client-grid">
+                                <div class="offer-client-row" id="previewClientCompanyRow" style="display:none">
+                                    <span>Εταιρεία:</span>
+                                    <strong id="previewClientCompany"></strong>
+                                </div>
+                                <div class="offer-client-row" id="previewClientPhoneRow" style="display:none">
+                                    <span>Τηλέφωνο:</span>
+                                    <strong id="previewClientPhone"></strong>
+                                </div>
+                                <div class="offer-client-row" id="previewClientEmailRow" style="display:none">
+                                    <span>Email:</span>
+                                    <strong id="previewClientEmail"></strong>
+                                </div>
+                                <div class="offer-client-row" id="previewClientAddressRow" style="display:none">
+                                    <span>Διεύθυνση:</span>
+                                    <strong id="previewClientAddress"></strong>
+                                </div>
+                                <div class="offer-client-row" id="previewClientAFMRow" style="display:none">
+                                    <span>ΑΦΜ:</span>
+                                    <strong id="previewClientAFM"></strong>
+                                </div>
+                                <div class="offer-client-row" id="previewClientDOYRow" style="display:none">
+                                    <span>ΔΟΥ:</span>
+                                    <strong id="previewClientDOY"></strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items -->
+                        <div class="offer-items-section" id="previewItemsBody"></div>
+
+                        <!-- Totals -->
+                        <div class="offer-totals">
+                            <div class="offer-totals-grid">
+                                <div class="total-row">
+                                    <span>Καθαρή Αξία:</span>
+                                    <span id="previewNetTotal">0,00 €</span>
+                                </div>
+                                <div class="total-row" id="previewDiscountRow" style="display:none">
+                                    <span>Έκπτωση:</span>
+                                    <span id="previewTotalDiscount" class="discount-value">-0,00 €</span>
+                                </div>
+                                <div class="total-row">
+                                    <span>ΦΠΑ (<span id="previewVatPercent">24</span>%):</span>
+                                    <span id="previewVat">0,00 €</span>
+                                </div>
+                                <div class="total-row total-final">
+                                    <span>Σύνολο Πληρωμής:</span>
+                                    <span id="previewGrandTotal">0,00 €</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        </div>
+                        <!-- ========== END PAGE 1 ========== -->
+
+                        <!-- ========== PAGE 2 ========== -->
+                        <div class="offer-page-2" id="offerPage2" style="display:block;visibility:visible;opacity:1;">
+                        <div class="page2-content" style="display:block;visibility:visible;opacity:1;">
+                            
+                            <!-- Terms (moved from page 1) -->
+                            <div class="offer-terms" style="margin-top:3rem;margin-bottom:2rem">
+                                <div class="offer-section-label">ΟΡΟΙ ΠΡΟΣΦΟΡΑΣ</div>
+                                <div class="offer-terms-grid">
+                                    <div class="term-item">
+                                        <span class="term-label">Τρόπος Πληρωμής</span>
+                                        <span class="term-value" id="previewPayment">Τραπεζική Κατάθεση</span>
+                                    </div>
+                                    <div class="term-item">
+                                        <span class="term-label">Ισχύς Προσφοράς</span>
+                                        <span class="term-value" id="previewValidity">7 ημέρες</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Notes (moved from page 1) -->
+                            <div class="offer-notes" id="previewNotesSection" style="display:none;margin-bottom:2rem">
+                                <div class="offer-section-label">ΣΗΜΕΙΩΣΕΙΣ</div>
+                                <p id="previewNotes"></p>
+                            </div>
+                            
+                            <!-- Closing -->
+                            <div class="page2-closing" id="previewClosingMessage">
+                                Στην διάθεσή σας.<br>
+                                Με εκτίμηση για την <strong id="previewCompanyName2">MacWorks E.E.</strong>
+                            </div>
+
+                            <!-- Signatory -->
+                            <div class="page2-signatory">
+                                <div class="page2-signatory-name" id="previewSignatory2">Παπαστεριάδης Κωνσταντίνος
+                                </div>
+                                <div class="page2-signatory-title" id="previewTitle2">Apple Certified Macintosh
+                                    Technician (ACMT)</div>
+                            </div>
+
+                            <!-- Bank Accounts -->
+                            <div class="page2-section">
+                                <div class="page2-section-title">Τρόπος πληρωμής:</div>
+                                <p>Η αξία οφείλει να καταβληθεί σε έναν από τους λογαριασμούς μας.</p>
+                                <div class="page2-banks" id="previewBanks">
+                                    <div><span class="bank-name">Alpha</span> <span
+                                            class="bank-iban">GR7801401390139002002025770</span></div>
+                                    <div><span class="bank-name">Πειραιώς</span> <span
+                                            class="bank-iban">GR4401720300005030116635211</span></div>
+                                    <div><span class="bank-name">Eurobank</span> <span
+                                            class="bank-iban">GR8802604380000190201064411</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            <div class="page2-section">
+                                <div class="page2-section-title">Παρατηρήσεις:</div>
+                                <ul class="page2-notes" id="previewPage2Notes">
+                                    <li>Οι τιμές περιλαμβάνουν Φ.Π.Α. <span id="previewVat2">24</span>%</li>
+                                    <li>Ο χρόνος διαθεσιμότητας υπόκειται στη διαθεσιμότητα του προμηθευτή.</li>
+                                    <li>Η προσφορά ισχύει <span id="previewValidityDays3">7</span> εργάσιμες ημέρες.</li>
+                                    <li>Οι τιμές ενδέχεται να μεταβληθούν.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Signatures (moved from page 1) -->
+                        <div class="offer-footer" style="margin-top:3rem">
+                            <div class="offer-footer-grid">
+                                <div class="signature-block">
+                                    <div class="signature-line"></div>
+                                    <span>Ο Προσφέρων</span>
+                                </div>
+                                <div class="signature-block">
+                                    <div class="signature-line"></div>
+                                    <span>Ο Αποδέκτης</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        </div>
+                        <!-- ========== END PAGE 2 ========== -->
+                    
+                    </div>
+                    <!-- ========== END DOCUMENT ========== -->
+
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Mobile toggle button (hidden on desktop) -->
+        <button class="mobile-toggle" id="mobileToggle" style="display: none;" aria-label="Toggle preview">
+            📄
+        </button>
+    </div>
+
+    <!-- Library Modal -->
+    <div class="modal-overlay" id="libraryModal">
+        <div class="modal-box modal-large">
+            <div class="modal-header">
+                <h3>📚 Βιβλιοθήκη Προσφορών</h3>
+                <button class="modal-close" id="closeLibrary">✕</button>
+            </div>
+            <div class="form-group" style="margin-bottom:0.5rem">
+                <input type="text" id="librarySearch" placeholder="🔍 Αναζήτηση...">
+            </div>
+            <div class="library-toolbar">
+                <button class="library-toolbar-btn active" id="btnSortLibrary" title="Εναλλαγή σειράς ταξινόμησης">📅↓ Νεότερα</button>
+                <button class="library-toolbar-btn" id="btnGroupClient" title="Ομαδοποίηση ανά πελάτη">👤 Ανά Πελάτη</button>
+            </div>
+            <div id="libraryContent">
+                <p style="text-align:center;padding:1.5rem;color:var(--text-muted)">Κενή βιβλιοθήκη</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- GitHub Setup Modal -->
+    <div class="modal-overlay" id="githubModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>🔐 GitHub Σύνδεση</h3>
+                <button class="modal-close" id="closeGithub">✕</button>
+            </div>
+            <div class="form-group">
+                <label>GitHub Username</label>
+                <input type="text" id="githubUsername" placeholder="yourusername">
+            </div>
+            <div class="form-group">
+                <label>Repository Name</label>
+                <input type="text" id="githubRepo" placeholder="offers-backup-private">
+            </div>
+            <div class="form-group">
+                <label>Personal Access Token</label>
+                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxx">
+                <span style="font-size:0.62rem;color:var(--text-muted);margin-top:2px">Settings → Developer settings →
+                    Tokens (classic) → repo scope</span>
+            </div>
+            <button class="btn btn-primary" id="btnSaveGithub" style="width:100%;margin-top:0.6rem">💾
+                Αποθήκευση</button>
+        </div>
+    </div>
+
+    <!-- Users Management Modal -->
+    <div class="modal-overlay" id="usersModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>👥 Διαχείριση Χρηστών</h3>
+                <button class="modal-close" id="closeUsers">✕</button>
+            </div>
+            <div id="usersContent">
+                <!-- Users list will be populated here -->
+            </div>
+            <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+                <h4 style="margin-bottom:0.5rem;font-size:0.85rem">➕ Προσθήκη Χρήστη</h4>
+                <div class="form-group">
+                    <input type="text" id="newUsername" placeholder="Username">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="newPassword" placeholder="Password">
+                </div>
+                <button class="btn btn-primary" id="btnAddUser" style="width:100%">💾 Προσθήκη</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast">
+        <span id="toastMessage"></span>
+        <button class="toast-close" id="toastClose" aria-label="Close">✕</button>
+    </div>
+
+    <!-- Quick Add Modal -->
+    <div class="modal-overlay" id="quickAddModal">
+        <div class="modal-content" style="max-width:700px;">
+            <div class="modal-header">
+                <h3>📋 Quick Add - Paste & Parse</h3>
+                <button class="modal-close" id="closeQuickAdd">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:1rem;">
+                    <h4 style="margin-bottom:0.5rem;color:var(--azul);">✨ Smart Format (NO LABELS NEEDED!):</h4>
+                    <code style="display:block;background:#0a0a12;padding:0.5rem;border-radius:4px;font-size:0.7rem;color:#00ff88;line-height:1.6;white-space:pre-wrap;">Forward Media
+Apple iMac
+24" M4
+Χρώμα: 
+Blue
+Επεξεργαστής: 
+Apple M4 (10‑core CPU, 10‑core GPU)
+Κάρτα Γραφικών: 
+Apple 10-Core GPU
+Μνήμη RAM: 
+16GB
+Αποθηκευτικός Χώρος: 
+256GB
+Πληκτρολόγιο: 
+Ελληνο-Αγγλικό
+1560
+https://b2b.i-system.gr/storage/image.webp</code>
+                    <div style="font-size:0.65rem;color:var(--text-muted);margin-top:0.3rem;">
+                        🧠 Auto-detects: Line 1=Client • Line 2=Name • Line 3=Model • Middle=Specs • Number=Price • URL=Image
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:1rem;opacity:0.7;">
+                    <h4 style="margin-bottom:0.5rem;color:var(--text-muted);font-size:0.8rem;">📦 Labeled Format (optional P1-P5):</h4>
+                    <code style="display:block;background:#0a0a12;padding:0.5rem;border-radius:4px;font-size:0.65rem;color:#00ff88;line-height:1.6;white-space:pre-wrap;">P1=Apple iMac
+P2=24" M4
+P3=Χρώμα: Blue
+Μνήμη RAM: 16GB
+P4=1560
+P5=https://...</code>
+                    <div style="font-size:0.6rem;color:var(--text-muted);margin-top:0.3rem;">
+                        P1=Name • P2=Model • P3=Specs • P4=Price • P5=Image
+                    </div>
+                </div>
+                
+                <div style="margin-bottom:1rem;opacity:0.7;">
+                    <h4 style="margin-bottom:0.5rem;color:var(--text-muted);font-size:0.8rem;">👤 Client Only (A-E):</h4>
+                    <code style="display:block;background:#0a0a12;padding:0.5rem;border-radius:4px;font-size:0.65rem;color:#00ff88;line-height:1.6;">
+A=Name<br>
+B=Company<br>
+C=Email<br>
+D=Phone<br>
+E=Address
+                    </code>
+                    </code>
+                </div>
+                
+                <label style="display:block;margin-bottom:0.3rem;font-weight:500;">Paste your text:</label>
+                <textarea id="quickAddInput" rows="12" style="width:100%;padding:0.6rem;font-family:monospace;font-size:0.75rem;background:var(--bg-secondary);border:1px solid var(--border-light);border-radius:var(--radius);color:var(--text-primary);resize:vertical;" placeholder="Paste product info or client info here..."></textarea>
+                
+                <div style="display:flex;gap:0.5rem;margin-top:1rem;">
+                    <button class="btn btn-primary" id="btnParseQuickAdd" style="flex:1;">✨ Parse & Add</button>
+                    <button class="btn btn-ghost" id="btnClearQuickAdd">🗑️ Clear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Internal Notes Prompt Modal -->
+    <div class="modal-overlay" id="internalNotesModal">
+        <div class="modal-box" style="max-width:420px">
+            <div class="modal-header">
+                <h3>🔒 Εσωτερικές Σημειώσεις</h3>
+                <button class="modal-close" id="closeInternalNotesModal">✕</button>
+            </div>
+            <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.8rem">Προσθέστε εσωτερικές σημειώσεις (κόστος, margin, κλπ). Δεν εμφανίζονται στο PDF.</p>
+            <div class="form-group">
+                <textarea id="internalNotesPromptInput" rows="5" placeholder="π.χ. Κόστος αγοράς 1200€, margin 30%..." style="width:100%;resize:vertical"></textarea>
+            </div>
+            <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+                <button class="btn btn-primary" id="btnSaveWithNotes" style="flex:1">💾 Αποθήκευση</button>
+                <button class="btn btn-ghost" id="btnSkipNotes" style="flex:1">Παράλειψη</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?t=1778889600"></script>
+</body>
+
+</html>
