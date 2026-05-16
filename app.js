@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605161400';
+const VERSION = '202605161440';
 console.log('🚀 Script.js loaded - Version:', VERSION);
 console.log('✅ Drag & Drop: ENABLED');
 console.log('✅ Checkboxes for Signatory/Title: ENABLED');
