@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605151200';
+const VERSION = '202605161400';
 console.log('🚀 Script.js loaded - Version:', VERSION);
 console.log('✅ Drag & Drop: ENABLED');
 console.log('✅ Checkboxes for Signatory/Title: ENABLED');
@@ -416,45 +416,34 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         } else {
             // No saved settings - try loading from company-settings.json
             try {
-                console.log('Loading company defaults from company-settings.json...');
                 const response = await fetch('company-settings.json');
-                
                 if (response.ok) {
-                    const defaults = await response.json();
-                    console.log('Loaded company defaults:', defaults);
-                    
-                    // Populate form with defaults
-                    setVal('#companyLogo', defaults.logoUrl);
-                    setVal('#companyName', defaults.companyName);
-                    setVal('#companyPhone', defaults.phone);
-                    setVal('#companyEmail', defaults.email);
-                    setVal('#companyAddress', defaults.address);
-                    setVal('#companyAFM', defaults.afm);
-                    setVal('#companyDOY', defaults.doy);
-                    setVal('#companyGEMI', defaults.gemi);
-                    setVal('#companyTitle', defaults.title);
-                    setVal('#closingMessage', defaults.closingMessage);
-                    setVal('#page2Notes', defaults.notes);
-                    setVal('#introTemplates', defaults.introTemplates);
-                    
-                    // Bank details
-                    if (defaults.bankDetails) {
-                        const bankText = Object.entries(defaults.bankDetails)
-                            .map(([bank, iban]) => `${bank.charAt(0).toUpperCase() + bank.slice(1)}: ${iban}`)
-                            .join('\n');
-                        setVal('#companyBanks', bankText);
+                    const file = await response.json();
+                    // Support both wrapped { companySettings: {...} } and flat format
+                    const cs = file.companySettings || file;
+
+                    setVal('#companyLogo', cs.logo || cs.logoUrl || '');
+                    setVal('#companyName', cs.name || cs.companyName || '');
+                    setVal('#companyPhone', cs.phone || '');
+                    setVal('#companyEmail', cs.email || '');
+                    setVal('#companyAddress', cs.address || '');
+                    setVal('#companyAFM', cs.afm || '');
+                    setVal('#companyDOY', cs.doy || '');
+                    setVal('#companyGEMI', cs.gemi || '');
+                    setVal('#companySignatory', cs.signatory || '');
+                    setVal('#companyTitle', cs.title || '');
+                    setVal('#closingMessage', cs.closingMessage || '');
+                    setVal('#page2Notes', cs.page2Notes || cs.notes || '');
+                    setVal('#introTemplates', cs.introTemplates || '');
+
+                    if (cs.banks) setVal('#companyBanks', cs.banks);
+
+                    if (file.customPaymentMethods?.length) {
+                        localStorage.setItem('customPaymentMethods', JSON.stringify(file.customPaymentMethods));
                     }
-                    
-                    // Custom payment methods
-                    if (defaults.customPaymentMethods && defaults.customPaymentMethods.length > 0) {
-                        localStorage.setItem('customPaymentMethods', JSON.stringify(defaults.customPaymentMethods));
-                    }
-                    
-                    previewLogoInForm(defaults.logoUrl);
-                    
+
+                    previewLogoInForm(cs.logo || cs.logoUrl || '');
                     showToast('✅ Loaded company defaults from file');
-                } else {
-                    console.log('No company-settings.json file found');
                 }
             } catch (error) {
                 console.log('Could not load company-settings.json:', error.message);
@@ -1868,9 +1857,12 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         }
         
         localStorage.setItem('offersLibrary', JSON.stringify(library));
-        
+
         // Save client data for autocomplete
         saveClientData();
+
+        // Auto-push to GitHub if configured
+        if (getGitHubConfig()?.token) syncToGitHub(true);
     }
 
     function saveClientData() {
@@ -2925,14 +2917,23 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         return config;
     }
 
-    async function syncToGitHub() {
+    function setSyncStatus(msg, color = 'var(--text-muted)') {
+        const el = $('#syncStatus');
+        if (!el) return;
+        el.style.display = 'block';
+        el.style.color = color;
+        el.textContent = msg;
+    }
+
+    async function syncToGitHub(silent = false) {
         const config = getGitHubConfig();
         if (!config || !config.token) {
-            showToast('⚠️ Ρυθμίστε πρώτα το GitHub', 'error');
+            if (!silent) showToast('⚠️ Ρυθμίστε πρώτα το GitHub', 'error');
             return;
         }
 
-        showToast('⏳ Uploading to GitHub...');
+        if (!silent) showToast('⏳ Uploading to GitHub...');
+        setSyncStatus('⏳ Pushing...');
 
         try {
             const offers = JSON.parse(localStorage.getItem('offersLibrary') || '[]');
@@ -2978,22 +2979,26 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
             });
             
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            
-            showToast(`✅ Pushed ${offers.length} offers to GitHub!`, 'success');
+
+            const now = new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+            setSyncStatus(`☁️ Pushed ${offers.length} • ${now}`, 'var(--success)');
+            if (!silent) showToast(`✅ Pushed ${offers.length} offers to GitHub!`, 'success');
         } catch (error) {
             console.error('GitHub sync error:', error);
-            showToast(`❌ Sync failed: ${error.message}`, 'error');
+            setSyncStatus(`❌ Push failed: ${error.message}`, 'var(--danger)');
+            if (!silent) showToast(`❌ Sync failed: ${error.message}`, 'error');
         }
     }
 
-    async function syncFromGitHub() {
+    async function syncFromGitHub(silent = false) {
         const config = getGitHubConfig();
         if (!config || !config.token) {
-            showToast('⚠️ Ρυθμίστε πρώτα το GitHub', 'error');
+            if (!silent) showToast('⚠️ Ρυθμίστε πρώτα το GitHub', 'error');
             return;
         }
 
-        showToast('⏳ Downloading from GitHub...');
+        if (!silent) showToast('⏳ Downloading from GitHub...');
+        setSyncStatus('⏳ Pulling...');
 
         try {
             const url = `https://api.github.com/repos/${config.username}/${config.repo}/contents/offers.json`;
@@ -3028,15 +3033,18 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
             });
             
             localStorage.setItem('offersLibrary', JSON.stringify(merged));
-            showToast(`✅ Pulled ${githubOffers.length} offers from GitHub!`, 'success');
-            
+            const now = new Date().toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit' });
+            setSyncStatus(`☁️ Pulled ${githubOffers.length} • ${now}`, 'var(--success)');
+            if (!silent) showToast(`✅ Pulled ${githubOffers.length} offers from GitHub!`, 'success');
+
             // Refresh library if open
             if ($('#libraryModal')?.classList.contains('active')) {
                 loadLibrary();
             }
         } catch (error) {
             console.error('GitHub sync error:', error);
-            showToast(`❌ Pull failed: ${error.message}`, 'error');
+            setSyncStatus(`❌ Pull failed: ${error.message}`, 'var(--danger)');
+            if (!silent) showToast(`❌ Pull failed: ${error.message}`, 'error');
         }
     }
 
@@ -3076,7 +3084,7 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
     function autoSyncGitHub() {
         const config = getGitHubConfig();
         if (config && config.token && config.username && config.repo) {
-            setTimeout(() => syncFromGitHub(), 1000);
+            setTimeout(() => syncFromGitHub(true), 1000);
         }
     }
 
