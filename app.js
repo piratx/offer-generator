@@ -389,68 +389,48 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
     // Company Settings
     // ────────────────────────────
     async function loadCompanySettings() {
-        const saved = localStorage.getItem('companySettings');
-        
-        if (saved) {
-            // Load from localStorage (user's saved settings)
-            const data = JSON.parse(saved);
-            setVal('#companyLogo', data.logo);
-            setVal('#companyName', data.name);
-            setVal('#companyPhone', data.phone);
-            setVal('#companyEmail', data.email);
-            setVal('#companyAddress', data.address);
-            setVal('#companyAFM', data.afm);
-            setVal('#companyDOY', data.doy || data.gemi); // Support both doy and legacy gemi
-            setVal('#companyGEMI', data.gemi);
-            setVal('#companySignatory', data.signatory);
-            setVal('#companyTitle', data.title);
-            setVal('#companyBanks', data.banks);
-            setVal('#companyClosing', data.closing);
-            setVal('#closingMessage', data.closingMessage);
-            setVal('#page2Notes', data.page2Notes);
-            setVal('#introTemplates', data.introTemplates);
-            previewLogoInForm(data.logo);
+        // Step 1: always load JSON as the base config
+        let cs = {};
+        try {
+            const response = await fetch('company-settings.json?v=' + VERSION);
+            if (response.ok) {
+                const file = await response.json();
+                cs = file.companySettings || file;
+                if (file.customPaymentMethods?.length && !localStorage.getItem('customPaymentMethods')) {
+                    localStorage.setItem('customPaymentMethods', JSON.stringify(file.customPaymentMethods));
+                }
+            }
+        } catch (e) {
+            console.log('Could not load company-settings.json:', e.message);
+        }
 
+        // Step 2: overlay with user-saved localStorage settings (non-empty values win)
+        const saved = localStorage.getItem('companySettings');
+        if (saved) {
+            const data = JSON.parse(saved);
+            Object.keys(data).forEach(k => { if (data[k]) cs[k] = data[k]; });
             const badge = $('#companySavedBadge');
             if (badge) badge.style.display = '';
-        } else {
-            // No saved settings - try loading from company-settings.json
-            try {
-                const response = await fetch('company-settings.json');
-                if (response.ok) {
-                    const file = await response.json();
-                    // Support both wrapped { companySettings: {...} } and flat format
-                    const cs = file.companySettings || file;
-
-                    setVal('#companyLogo', cs.logo || cs.logoUrl || '');
-                    setVal('#companyName', cs.name || cs.companyName || '');
-                    setVal('#companyPhone', cs.phone || '');
-                    setVal('#companyEmail', cs.email || '');
-                    setVal('#companyAddress', cs.address || '');
-                    setVal('#companyAFM', cs.afm || '');
-                    setVal('#companyDOY', cs.doy || '');
-                    setVal('#companyGEMI', cs.gemi || '');
-                    setVal('#companySignatory', cs.signatory || '');
-                    setVal('#companyTitle', cs.title || '');
-                    setVal('#closingMessage', cs.closingMessage || '');
-                    setVal('#page2Notes', cs.page2Notes || cs.notes || '');
-                    setVal('#introTemplates', cs.introTemplates || '');
-
-                    if (cs.banks) setVal('#companyBanks', cs.banks);
-
-                    if (file.customPaymentMethods?.length) {
-                        localStorage.setItem('customPaymentMethods', JSON.stringify(file.customPaymentMethods));
-                    }
-
-                    previewLogoInForm(cs.logo || cs.logoUrl || '');
-                    showToast('✅ Loaded company defaults from file');
-                }
-            } catch (error) {
-                console.log('Could not load company-settings.json:', error.message);
-            }
         }
-        
-        populateIntroTemplates(); // Populate template dropdown
+
+        // Step 3: apply merged result to form
+        setVal('#companyLogo',      cs.logo || cs.logoUrl || '');
+        setVal('#companyName',      cs.name || cs.companyName || '');
+        setVal('#companyPhone',     cs.phone || '');
+        setVal('#companyEmail',     cs.email || '');
+        setVal('#companyAddress',   cs.address || '');
+        setVal('#companyAFM',       cs.afm || '');
+        setVal('#companyDOY',       cs.doy || '');
+        setVal('#companyGEMI',      cs.gemi || '');
+        setVal('#companySignatory', cs.signatory || '');
+        setVal('#companyTitle',     cs.title || '');
+        setVal('#closingMessage',   cs.closingMessage || '');
+        setVal('#page2Notes',       cs.page2Notes || cs.notes || '');
+        setVal('#introTemplates',   cs.introTemplates || '');
+        if (cs.banks) setVal('#companyBanks', cs.banks);
+        previewLogoInForm(cs.logo || cs.logoUrl || '');
+
+        populateIntroTemplates();
     }
 
     function setVal(sel, val) {
