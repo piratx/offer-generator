@@ -8,3 +8,6 @@ sub2-test/
 
 # macOS
 .DS_Store
+
+# Private company settings — keep local only, never push to public repo
+company-settings.json
