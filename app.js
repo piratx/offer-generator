@@ -4,7 +4,24 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605221936';
+const VERSION = '202605221943';
+
+const DEFAULT_COMPANY = {
+    logo:           'https://macworks.gr/macworks-logo.png',
+    name:           'MacWorks E.E.',
+    phone:          '6972840146',
+    email:          'konstantinos@macworks.gr',
+    address:        'Φαιδριάδων 49 11364',
+    afm:            '802932464',
+    doy:            'ΚΕΦΟΔΕ Αττικής',
+    gemi:           '149564703000',
+    signatory:      'Konstantinos Papasteriadis',
+    title:          '',
+    banks:          '',
+    closingMessage: 'Στην διάθεσή σας.\nΜε εκτίμηση για την MacWorks E.E.',
+    page2Notes:     'Οι τιμές δεν περιλαμβάνουν Φ.Π.Α. {vat}%\nΟ χρόνος διαθεσιμότητας υπόκειται στη διαθεσιμότητα του προμηθευτή.\nΗ προσφορά ισχύει {validity} εργάσιμες ημέρες.\nΟι τιμές ενδέχεται να μεταβληθούν.',
+    introTemplates: 'apple|αγορά|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για την αγορά Apple προϊόντων.\n\nservice|επισκευή|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για την επισκευή/αναβάθμιση της συσκευής σας.\n\ndesktop|αγορά|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για την αγορά desktop υπολογιστή.\n\ncustompc|αγορά|Κατόπιν συνεννόησης μας και έχοντας λάβει γνώση των αναγκών σας, παραθέτω την οικονομική μου προσφορά για την κατασκευή custom PC.\n\nlaptop|αγορά|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για την αγορά laptop υπολογιστή.\n\nmicrosoft365|αγορά|Κατόπιν συνεννόησης μας παραθέτω την οικονομική μου προσφορά για συνδρομή Microsoft 365.'
+};
 console.log('🚀 Script.js loaded - Version:', VERSION);
 console.log('✅ Drag & Drop: ENABLED');
 console.log('✅ Checkboxes for Signatory/Title: ENABLED');
@@ -389,19 +406,20 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
     // Company Settings
     // ────────────────────────────
     async function loadCompanySettings() {
-        // Step 1: always load JSON as the base config
-        let cs = {};
+        // Step 1: start from hardcoded defaults, then try to overlay local JSON
+        let cs = Object.assign({}, DEFAULT_COMPANY);
         try {
             const response = await fetch('company-settings.json?v=' + VERSION);
             if (response.ok) {
                 const file = await response.json();
-                cs = file.companySettings || file;
+                const fromFile = file.companySettings || file;
+                Object.keys(fromFile).forEach(k => { if (fromFile[k]) cs[k] = fromFile[k]; });
                 if (file.customPaymentMethods?.length && !localStorage.getItem('customPaymentMethods')) {
                     localStorage.setItem('customPaymentMethods', JSON.stringify(file.customPaymentMethods));
                 }
             }
         } catch (e) {
-            console.log('Could not load company-settings.json:', e.message);
+            console.log('Could not load company-settings.json, using built-in defaults.');
         }
 
         // Step 2: overlay with user-saved localStorage settings (non-empty values win)
@@ -604,41 +622,11 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         updatePreview();
     }
 
-    async function resetToDefaults() {
-        if (!confirm('Reset to company-settings.json?\n\nThis will DELETE your saved company settings and reload defaults from the JSON file.')) {
+    function resetToDefaults() {
+        if (!confirm('Reset to defaults?\n\nThis will DELETE your saved company settings and restore the built-in defaults.')) {
             return;
         }
-
-        // Try server fetch first (works when running locally)
-        try {
-            const response = await fetch('company-settings.json?v=' + VERSION);
-            if (response.ok) {
-                const file = await response.json();
-                applyCompanySettingsObject(file.companySettings || file);
-                return;
-            }
-        } catch (e) { /* fall through to file picker */ }
-
-        // Server fetch failed (file is gitignored) — ask user to pick the file
-        showToast('📂 Select your company-settings.json file...', 'info');
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                try {
-                    const parsed = JSON.parse(ev.target.result);
-                    applyCompanySettingsObject(parsed.companySettings || parsed);
-                } catch (err) {
-                    showToast('❌ Invalid JSON file!', 'error');
-                }
-            };
-            reader.readAsText(file);
-        };
-        input.click();
+        applyCompanySettingsObject(DEFAULT_COMPANY);
     }
 
     // ────────────────────────────
