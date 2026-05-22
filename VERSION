@@ -1,5 +1,5 @@
-VERSION=202605161440
-Always load company-settings.json as base config; add deploy.sh for auto-versioning
+VERSION=202605221923
+Gitignore company-settings.json — keep real data local only
 
-CURRENT VERSION: 202605161440
-Date: 2026-05-16
+CURRENT VERSION: 202605221923
+Date: 2026-05-22

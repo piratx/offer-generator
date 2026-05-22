@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605161440';
+const VERSION = '202605221923';
 console.log('🚀 Script.js loaded - Version:', VERSION);
 console.log('✅ Drag & Drop: ENABLED');
 console.log('✅ Checkboxes for Signatory/Title: ENABLED');
@@ -556,20 +556,51 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         if (!confirm('Reset to company-settings.json?\n\nThis will DELETE your saved company settings and reload defaults from the JSON file.')) {
             return;
         }
-        
-        console.log('Resetting to company-settings.json defaults...');
-        
-        // Clear localStorage
+
+        // Fetch JSON first — only proceed if it succeeds
+        let cs = null;
+        try {
+            const response = await fetch('company-settings.json?v=' + VERSION);
+            if (!response.ok) {
+                showToast('❌ company-settings.json not found on server (file is local-only). Use Import JSON instead.', 'error');
+                return;
+            }
+            const file = await response.json();
+            cs = file.companySettings || file;
+        } catch (e) {
+            showToast('❌ Could not load company-settings.json: ' + e.message, 'error');
+            return;
+        }
+
+        // JSON loaded successfully — now clear localStorage and apply
         localStorage.removeItem('companySettings');
         localStorage.removeItem('customPaymentMethods');
-        
-        // Hide the saved badge
+
         const badge = $('#companySavedBadge');
         if (badge) badge.style.display = 'none';
-        
-        // Reload settings from JSON file
-        await loadCompanySettings();
-        
+
+        // Apply directly (skip re-fetch inside loadCompanySettings)
+        setVal('#companyLogo',      cs.logo || cs.logoUrl || '');
+        setVal('#companyName',      cs.name || cs.companyName || '');
+        setVal('#companyPhone',     cs.phone || '');
+        setVal('#companyEmail',     cs.email || '');
+        setVal('#companyAddress',   cs.address || '');
+        setVal('#companyAFM',       cs.afm || '');
+        setVal('#companyDOY',       cs.doy || '');
+        setVal('#companyGEMI',      cs.gemi || '');
+        setVal('#companySignatory', cs.signatory || '');
+        setVal('#companyTitle',     cs.title || '');
+        setVal('#closingMessage',   cs.closingMessage || '');
+        setVal('#page2Notes',       cs.page2Notes || cs.notes || '');
+        setVal('#introTemplates',   cs.introTemplates || '');
+        if (cs.banks) setVal('#companyBanks', cs.banks);
+        previewLogoInForm(cs.logo || cs.logoUrl || '');
+        populateIntroTemplates();
+
+        if (cs.customPaymentMethods?.length) {
+            localStorage.setItem('customPaymentMethods', JSON.stringify(cs.customPaymentMethods));
+        }
+
         showToast('✅ Reset to defaults from company-settings.json!');
         updatePreview();
     }
