@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605221928';
+const VERSION = '202605221935';
 console.log('🚀 Script.js loaded - Version:', VERSION);
 console.log('✅ Drag & Drop: ENABLED');
 console.log('✅ Checkboxes for Signatory/Title: ENABLED');
@@ -431,6 +431,7 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         previewLogoInForm(cs.logo || cs.logoUrl || '');
 
         populateIntroTemplates();
+        updatePreview();
     }
 
     function setVal(sel, val) {
