@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605221935';
+const VERSION = '202605221936';
 console.log('🚀 Script.js loaded - Version:', VERSION);
 console.log('✅ Drag & Drop: ENABLED');
 console.log('✅ Checkboxes for Signatory/Title: ENABLED');
@@ -572,34 +572,13 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         event.target.value = '';
     }
     
-    async function resetToDefaults() {
-        if (!confirm('Reset to company-settings.json?\n\nThis will DELETE your saved company settings and reload defaults from the JSON file.')) {
-            return;
-        }
-
-        // Fetch JSON first — only proceed if it succeeds
-        let cs = null;
-        try {
-            const response = await fetch('company-settings.json?v=' + VERSION);
-            if (!response.ok) {
-                showToast('❌ company-settings.json not found on server (file is local-only). Use Import JSON instead.', 'error');
-                return;
-            }
-            const file = await response.json();
-            cs = file.companySettings || file;
-        } catch (e) {
-            showToast('❌ Could not load company-settings.json: ' + e.message, 'error');
-            return;
-        }
-
-        // JSON loaded successfully — now clear localStorage and apply
+    function applyCompanySettingsObject(cs) {
         localStorage.removeItem('companySettings');
         localStorage.removeItem('customPaymentMethods');
 
         const badge = $('#companySavedBadge');
         if (badge) badge.style.display = 'none';
 
-        // Apply directly (skip re-fetch inside loadCompanySettings)
         setVal('#companyLogo',      cs.logo || cs.logoUrl || '');
         setVal('#companyName',      cs.name || cs.companyName || '');
         setVal('#companyPhone',     cs.phone || '');
@@ -623,6 +602,43 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
 
         showToast('✅ Reset to defaults from company-settings.json!');
         updatePreview();
+    }
+
+    async function resetToDefaults() {
+        if (!confirm('Reset to company-settings.json?\n\nThis will DELETE your saved company settings and reload defaults from the JSON file.')) {
+            return;
+        }
+
+        // Try server fetch first (works when running locally)
+        try {
+            const response = await fetch('company-settings.json?v=' + VERSION);
+            if (response.ok) {
+                const file = await response.json();
+                applyCompanySettingsObject(file.companySettings || file);
+                return;
+            }
+        } catch (e) { /* fall through to file picker */ }
+
+        // Server fetch failed (file is gitignored) — ask user to pick the file
+        showToast('📂 Select your company-settings.json file...', 'info');
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                try {
+                    const parsed = JSON.parse(ev.target.result);
+                    applyCompanySettingsObject(parsed.companySettings || parsed);
+                } catch (err) {
+                    showToast('❌ Invalid JSON file!', 'error');
+                }
+            };
+            reader.readAsText(file);
+        };
+        input.click();
     }
 
     // ────────────────────────────
