@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605221925';
+const VERSION = '202605221928';
 console.log('🚀 Script.js loaded - Version:', VERSION);
 console.log('✅ Drag & Drop: ENABLED');
 console.log('✅ Checkboxes for Signatory/Title: ENABLED');
@@ -519,36 +519,55 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
     function handleImportFile(event) {
         const file = event.target.files[0];
         if (!file) return;
-        
+
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const settings = JSON.parse(e.target.result);
-                
-                // Restore settings
-                if (settings.companySettings) {
-                    localStorage.setItem('companySettings', JSON.stringify(settings.companySettings));
-                }
+
                 if (settings.customPaymentMethods) {
                     localStorage.setItem('customPaymentMethods', JSON.stringify(settings.customPaymentMethods));
                     customPaymentMethods = settings.customPaymentMethods;
+                    loadCustomOptions();
                 }
                 if (settings.imageUrlHistory) {
                     localStorage.setItem('imageUrlHistory', JSON.stringify(settings.imageUrlHistory));
                     imageUrlHistory = settings.imageUrlHistory;
                 }
-                
-                // Reload page to apply settings
-                showToast('✅ Settings imported! Reloading...');
-                setTimeout(() => location.reload(), 1000);
+
+                // Apply company settings live — no page reload needed
+                const cs = settings.companySettings;
+                if (cs) {
+                    localStorage.setItem('companySettings', JSON.stringify(cs));
+                    setVal('#companyLogo',      cs.logo || cs.logoUrl || '');
+                    setVal('#companyName',      cs.name || cs.companyName || '');
+                    setVal('#companyPhone',     cs.phone || '');
+                    setVal('#companyEmail',     cs.email || '');
+                    setVal('#companyAddress',   cs.address || '');
+                    setVal('#companyAFM',       cs.afm || '');
+                    setVal('#companyDOY',       cs.doy || '');
+                    setVal('#companyGEMI',      cs.gemi || '');
+                    setVal('#companySignatory', cs.signatory || '');
+                    setVal('#companyTitle',     cs.title || '');
+                    setVal('#closingMessage',   cs.closingMessage || '');
+                    setVal('#page2Notes',       cs.page2Notes || cs.notes || '');
+                    setVal('#introTemplates',   cs.introTemplates || '');
+                    if (cs.banks) setVal('#companyBanks', cs.banks);
+                    previewLogoInForm(cs.logo || cs.logoUrl || '');
+                    const badge = $('#companySavedBadge');
+                    if (badge) badge.style.display = '';
+                    populateIntroTemplates();
+                }
+
+                showToast('✅ Settings imported!');
+                updatePreview();
             } catch (error) {
                 showToast('❌ Invalid JSON file!');
                 console.error('Import error:', error);
             }
         };
         reader.readAsText(file);
-        
-        // Reset file input
+
         event.target.value = '';
     }
     
