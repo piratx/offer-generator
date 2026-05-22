@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605222002';
+const VERSION = '202605230033';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
@@ -174,13 +174,28 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         setTodayDate();
         loadCompanySettings();
         loadCustomOptions();
-        populateSavedClients(); // Populate client autocomplete
+        populateSavedClients();
         addItem();
         bindEvents();
         bindGitHubEvents();
-        bindMobileToggle(); // Mobile preview toggle
+        bindMobileToggle();
+        wrapSelects();
         updatePreview();
         autoSyncGitHub();
+    }
+
+    // ────────────────────────────
+    // Select Wrapper (Safari arrow fix)
+    // ────────────────────────────
+    function wrapSelects(root) {
+        const container = root || document;
+        container.querySelectorAll('.form-group select').forEach(sel => {
+            if (sel.parentElement.classList.contains('select-wrapper')) return;
+            const wrapper = document.createElement('div');
+            wrapper.className = 'select-wrapper';
+            sel.parentNode.insertBefore(wrapper, sel);
+            wrapper.appendChild(sel);
+        });
     }
 
     // ────────────────────────────
@@ -1370,6 +1385,8 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
                 }
             });
         });
+
+        wrapSelects(container);
     }
 
     function warrantyOptions(selected) {
