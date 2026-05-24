@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605230033';
+const VERSION = '202605241047';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
@@ -2620,15 +2620,25 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
             });
         }
         
-        // Section toggles
+        // Section toggles — use touchend + click for iOS Safari compatibility
         $$('[data-toggle]').forEach(header => {
-            header.addEventListener('click', () => {
+            let didTouch = false;
+            const toggle = () => {
                 const targetId = header.getAttribute('data-toggle');
                 const body = $(`#${targetId}`);
                 if (body) {
                     body.classList.toggle('open');
                     header.classList.toggle('collapsed');
                 }
+            };
+            header.addEventListener('touchend', (e) => {
+                didTouch = true;
+                e.preventDefault();
+                toggle();
+                setTimeout(() => { didTouch = false; }, 400);
+            }, { passive: false });
+            header.addEventListener('click', () => {
+                if (!didTouch) toggle();
             });
         });
 
@@ -3266,9 +3276,11 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         
         // Burger menu click
         burgerMenu.addEventListener('click', toggleMenu);
-        
-        // Overlay click closes menu
+        burgerMenu.addEventListener('touchend', (e) => { e.preventDefault(); toggleMenu(); }, { passive: false });
+
+        // Overlay click/tap closes menu — touchend needed for iOS Safari (divs don't fire click without cursor:pointer hack)
         menuOverlay.addEventListener('click', closeMenu);
+        menuOverlay.addEventListener('touchend', (e) => { e.preventDefault(); closeMenu(); }, { passive: false });
         
         // Close menu when clicking any menu button
         appHeader.querySelectorAll('.btn').forEach(btn => {
