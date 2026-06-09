@@ -351,6 +351,8 @@ body {
     cursor: pointer;
     user-select: none;
     transition: background 0.2s;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.08);
+    touch-action: manipulation;
 }
 
 .section-header:hover {
@@ -429,7 +431,7 @@ body {
     padding: 0.45rem 0.6rem;
     border-radius: var(--radius);
     border: 0.5px solid var(--border-light);
-    background: var(--bg-secondary);
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
     font-family: inherit;
     font-size: 0.8rem;
@@ -442,7 +444,7 @@ body {
 .form-group textarea:focus {
     border-color: var(--azul-light);
     box-shadow: 0 0 0 2px var(--azul-subtle);
-    background: var(--bg-card);
+    background-color: var(--bg-card);
 }
 
 .form-group input[readonly] {
@@ -461,11 +463,27 @@ body {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
-    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nbm9uZScgc3Ryb2tlPScjOTQ5NGIwJyBzdHJva2Utd2lkdGg9JzInIHN0cm9rZS1saW5lY2FwPSdyb3VuZCcgc3Ryb2tlLWxpbmVqb2luPSdyb3VuZCc+PHBvbHlsaW5lIHBvaW50cz0nNiA5IDEyIDE1IDE4IDknLz48L3N2Zz4=");
-    background-repeat: no-repeat;
-    background-position: right 0.5rem center;
-    background-size: 12px;
+    background-image: none;
     padding-right: 1.6rem;
+    width: 100%;
+}
+
+/* Arrow via wrapper — avoids Safari background-image tiling bug */
+.select-wrapper {
+    position: relative;
+    display: block;
+}
+
+.select-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMicgaGVpZ2h0PScxMicgdmlld0JveD0nMCAwIDI0IDI0JyBmaWxsPSdub25lJyBzdHJva2U9JyM5NDk0YjAnIHN0cm9rZS13aWR0aD0nMicgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJyBzdHJva2UtbGluZWpvaW49J3JvdW5kJz48cG9seWxpbmUgcG9pbnRzPSc2IDkgMTIgMTUgMTggOScvPjwvc3ZnPg==") no-repeat center / 12px 12px;
+    pointer-events: none;
 }
 
 .form-row {
@@ -1948,7 +1966,17 @@ body.night-mode.warm-night .offer-document {
     .page2-banks {
         background: #f8f9fa !important;
         border-left-color: #76689a !important;
+        color: #222 !important;
         -webkit-print-color-adjust: exact !important;
+    }
+
+    .page2-banks .bank-name,
+    .page2-banks .bank-iban,
+    body.night-mode .page2-banks,
+    body.night-mode .page2-banks .bank-name,
+    body.night-mode .page2-banks .bank-iban {
+        color: #222 !important;
+        background: transparent !important;
     }
 
     /* Avoid breaking inside items */
@@ -2812,10 +2840,12 @@ body.night-mode .version-terminal {
         overflow-y: auto;
         box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
         padding-top: env(safe-area-inset-top, 0px);
+        pointer-events: none; /* Prevent iOS from intercepting taps when off-screen */
     }
-    
+
     .app-header.menu-open {
         left: 0;
+        pointer-events: auto;
     }
     
     /* Better content layout */
@@ -2919,8 +2949,10 @@ body.night-mode .version-terminal {
         z-index: 9998;
         opacity: 0;
         transition: opacity 0.3s;
+        cursor: pointer; /* Required for iOS Safari to fire click/touch events on div */
+        -webkit-tap-highlight-color: transparent;
     }
-    
+
     .menu-overlay.active {
         display: block;
         opacity: 1;
