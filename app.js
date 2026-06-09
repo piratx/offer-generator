@@ -2010,6 +2010,7 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
                 </div>
                 <div class="library-item-actions">
                     <button class="btn-load-offer" data-offer-id="${escapeHtml(offer.id)}" style="background:var(--azul-subtle);color:var(--azul-light)">Φόρτωση</button>
+                    <button class="btn-duplicate-offer" data-offer-id="${escapeHtml(offer.id)}" title="Αντιγραφή ως νέα προσφορά" style="background:rgba(16,185,129,0.12);color:#10b981">📋</button>
                     <button class="btn-delete-offer" data-offer-id="${escapeHtml(offer.id)}" style="background:rgba(239,68,68,0.1);color:var(--danger)">🗑️</button>
                 </div>
             </div>
@@ -2039,6 +2040,10 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         container.querySelectorAll('.btn-load-offer').forEach(btn => {
             btn.addEventListener('click', () => loadOffer(btn.getAttribute('data-offer-id')));
         });
+        container.querySelectorAll('.btn-duplicate-offer').forEach(btn => {
+            btn.addEventListener('click', () => duplicateOffer(btn.getAttribute('data-offer-id')));
+        });
+
         container.querySelectorAll('.btn-delete-offer').forEach(btn => {
             btn.addEventListener('click', () => deleteOffer(btn.getAttribute('data-offer-id')));
         });
@@ -2090,6 +2095,33 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         localStorage.setItem('offersLibrary', JSON.stringify(library));
         loadLibrary();
         showToast('🗑️ Διαγράφηκε');
+    }
+
+    function duplicateOffer(id) {
+        const library = JSON.parse(localStorage.getItem('offersLibrary') || '[]');
+        const original = library.find(o => o.id === id);
+        if (!original) { showToast('❌ Offer not found'); return; }
+
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const timestamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}`;
+        const clientName = original.clientName || original.clientCompany || 'Client';
+        const sanitizedName = clientName.trim().replace(/[^a-zA-Z0-9Ͱ-Ͽ\s]/g, '').replace(/\s+/g, '_').substring(0, 30);
+        const newNumber = `${timestamp}-${sanitizedName || 'Client'}`;
+
+        const copy = Object.assign({}, original, {
+            id: newNumber,
+            number: newNumber,
+            savedAt: now.toISOString(),
+            savedBy: currentUser?.username
+        });
+
+        let updatedLibrary = JSON.parse(localStorage.getItem('offersLibrary') || '[]');
+        updatedLibrary.unshift(copy);
+        localStorage.setItem('offersLibrary', JSON.stringify(updatedLibrary));
+
+        loadOffer(newNumber);
+        showToast('📋 Αντιγράφηκε ως νέα προσφορά!');
     }
 
     function exportBackup() {
@@ -2773,6 +2805,13 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         const btnSaveOffer = $('#btnSaveOffer');
         if (btnSaveOffer) btnSaveOffer.addEventListener('click', saveOffer);
 
+        const btnDuplicateOffer = $('#btnDuplicateOffer');
+        if (btnDuplicateOffer) btnDuplicateOffer.addEventListener('click', () => {
+            const currentId = getVal('#offerNumber');
+            if (!currentId) { showToast('⚠️ Αποθήκευσε πρώτα την προσφορά'); return; }
+            duplicateOffer(currentId);
+        });
+
         const closeInternalNotesModal = $('#closeInternalNotesModal');
         if (closeInternalNotesModal) closeInternalNotesModal.addEventListener('click', () => {
             $('#internalNotesModal')?.classList.remove('active');
@@ -3234,6 +3273,7 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
     window._updatePCComponent = updatePCComponent;
     window._loadOffer = loadOffer;
     window._deleteOffer = deleteOffer;
+    window._duplicateOffer = duplicateOffer;
     window._syncToGitHub = syncToGitHub;
     window._syncFromGitHub = syncFromGitHub;
     window._deleteUser = deleteUser;
