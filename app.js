@@ -1,10 +1,10 @@
 /* ===========================
    Offer Generator — Script
-   Version: 202603210355
+   Version: 202606092134
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202605261626';
+const VERSION = '202606092134';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
