@@ -1,10 +1,10 @@
 /* ===========================
    Offer Generator — Script
-   Version: 202603210340
+   Version: 202606092134
    See VERSION file for current version info
    =========================== */
 
-console.log('🚀 Script.js loaded - Version: 202603210340');
+console.log('🚀 Script.js loaded - Version: 202606092134');
 
 (function () {
     'use strict';
