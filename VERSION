@@ -1,5 +1,5 @@
-VERSION=202609161809
-Fix updatePCTotals SyntaxError (item.id float broke querySelector)
+VERSION=202609161859
+Fix double-VAT on Custom PC items with per-component prices
 
-CURRENT VERSION: 202609161809
+CURRENT VERSION: 202609161859
 Date: 2026-09-16

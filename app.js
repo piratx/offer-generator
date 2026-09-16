@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202609161809';
+const VERSION = '202609161859';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
@@ -997,11 +997,19 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         const subtotal = componentsTotal + discountedSetup;
         const totalWithVAT = subtotal * 1.24;
 
+        // item.price is always treated as the NET (pre-VAT) price everywhere else
+        // in the app — calculateItemPrice() applies discount/margin/VAT on top of
+        // it using the item's own addVAT flag and the offer's VAT rate. Storing
+        // totalWithVAT (which already has a hardcoded +24% baked in) here double-
+        // charged VAT: a component sum of 1155 became item.price = 1432.20, which
+        // calculateItemPrice then taxed AGAIN to 1775.93. Store the net subtotal
+        // instead, and let the existing VAT logic apply it exactly once.
+        //
         // Only auto-calc the item's price from components when there's actually
         // something to compute from. This avoids clobbering a manually-set total
         // (e.g. a Quick Add PC build pasted without per-component prices) with 0.
         if (componentsTotal > 0 || setupFee > 0) {
-            item.price = totalWithVAT;
+            item.price = subtotal;
         }
 
         // Update display elements if they exist
