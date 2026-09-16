@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202609161250';
+const VERSION = '202609161809';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
@@ -1005,9 +1005,13 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         }
 
         // Update display elements if they exist
-        const compEl = $(`#pc-components-total-${item.id}`);
-        const subEl = $(`#pc-subtotal-${item.id}`);
-        const totalEl = $(`#pc-total-${item.id}`);
+        // Use getElementById (not the $ querySelector helper) — item.id is a float
+        // (Date.now() + Math.random()), and its "." breaks CSS selector syntax when
+        // interpolated into a querySelector string, throwing a SyntaxError that used
+        // to silently abort whatever caller triggered this (e.g. Quick Add).
+        const compEl = document.getElementById(`pc-components-total-${item.id}`);
+        const subEl = document.getElementById(`pc-subtotal-${item.id}`);
+        const totalEl = document.getElementById(`pc-total-${item.id}`);
         
         if (compEl) compEl.textContent = formatCurrency(componentsTotal);
         if (subEl) subEl.textContent = formatCurrency(subtotal);

@@ -1,5 +1,5 @@
-VERSION=202609161250
-v202606092134 — sync version string in app.js
+VERSION=202609161809
+Fix updatePCTotals SyntaxError (item.id float broke querySelector)
 
-CURRENT VERSION: 202609161250
+CURRENT VERSION: 202609161809
 Date: 2026-09-16
