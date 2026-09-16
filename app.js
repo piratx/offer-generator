@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202606092134';
+const VERSION = '202609161250';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
@@ -996,10 +996,14 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
         const discountedSetup = setupFee * (1 - discount / 100);
         const subtotal = componentsTotal + discountedSetup;
         const totalWithVAT = subtotal * 1.24;
-        
-        // Update the item's price to the total
-        item.price = totalWithVAT;
-        
+
+        // Only auto-calc the item's price from components when there's actually
+        // something to compute from. This avoids clobbering a manually-set total
+        // (e.g. a Quick Add PC build pasted without per-component prices) with 0.
+        if (componentsTotal > 0 || setupFee > 0) {
+            item.price = totalWithVAT;
+        }
+
         // Update display elements if they exist
         const compEl = $(`#pc-components-total-${item.id}`);
         const subEl = $(`#pc-subtotal-${item.id}`);
@@ -2183,18 +2187,161 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
     // ────────────────────────────
     function parseQuickAdd(text) {
         const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l);
-        
+
         // Check for labeled format (A=, B=, P1=, P2=, etc.)
         const hasLabels = lines.some(l => /^[A-Z]\d*=/i.test(l));
-        
+
         if (hasLabels) {
             return parseLabeledFormat(lines);
-        } else {
-            // Smart unlabeled format
-            return parseSmartFormat(lines);
         }
+
+        // Table paste: Α/Α | ΠΕΡΙΓΡΑΦΗ | ΠΟΣΟΤΗΤΑ | ΤΙΜΗ ΜΟΝΑΔΑΣ | ΣΥΝΟΛΟ (one cell per line, from copy-pasting a table)
+        const tableResult = parseTableFormat(lines);
+        if (tableResult) return tableResult;
+
+        // PC build list: "Title ... 699 ευρώ" followed by "Cpu ... / Ram ... / Gpu ..." component lines
+        const pcBuildResult = parsePcBuildFormat(lines);
+        if (pcBuildResult) return pcBuildResult;
+
+        // Smart unlabeled format
+        return parseSmartFormat(lines);
     }
-    
+
+    // ────────────────────────────
+    // Quick Add: table paste (Α/Α, ΠΕΡΙΓΡΑΦΗ, ΠΟΣΟΤΗΤΑ, ΤΙΜΗ ΜΟΝΑΔΑΣ, ΣΥΝΟΛΟ)
+    // ────────────────────────────
+    function normalizeGreekText(s) {
+        return (s || '').toLowerCase()
+            .replace(/ά/g, 'α').replace(/έ/g, 'ε').replace(/ή/g, 'η')
+            .replace(/ί|ϊ|ΐ/g, 'ι').replace(/ό/g, 'ο')
+            .replace(/ύ|ϋ|ΰ/g, 'υ').replace(/ώ/g, 'ω')
+            .trim();
+    }
+
+    const TABLE_HEADER_TOKENS = ['α/α', 'a/a', 'περιγραφη', 'ποσοτητα', 'τιμη μοναδας', 'τιμη', 'μοναδας', 'συνολο'];
+
+    function parseCurrencyToken(tok) {
+        if (!tok) return null;
+        const m = tok.replace(/\s/g, '').match(/^(\d+(?:[.,]\d+)?)\s*€?$/);
+        if (!m) return null;
+        return parseFloat(m[1].replace(',', '.'));
+    }
+
+    function parseTableFormat(lines) {
+        if (lines.length < 5) return null;
+
+        let p = 0;
+        // Skip an optional header row (cells may arrive one per line, e.g. "Α/Α", "ΠΕΡΙΓΡΑΦΗ", ...)
+        while (p < lines.length && TABLE_HEADER_TOKENS.includes(normalizeGreekText(lines[p]))) {
+            p++;
+        }
+
+        const rows = [];
+        let expectedIdx = 1;
+
+        while (p + 4 < lines.length) {
+            const idxLine = lines[p];
+            const descLine = lines[p + 1];
+            const qtyLine = lines[p + 2];
+            const priceLine = lines[p + 3];
+            const totalLine = lines[p + 4];
+
+            if (!/^\d+$/.test(idxLine) || parseInt(idxLine, 10) !== expectedIdx) break;
+            if (!descLine || /^\d+([.,]\d+)?$/.test(descLine)) break; // description should be text, not a bare number
+            if (!/^\d+$/.test(qtyLine)) break;
+
+            const unitPrice = parseCurrencyToken(priceLine);
+            const total = parseCurrencyToken(totalLine);
+            if (unitPrice === null || total === null) break;
+
+            rows.push({
+                description: descLine,
+                quantity: parseInt(qtyLine, 10),
+                unitPrice
+            });
+
+            p += 5;
+            expectedIdx++;
+        }
+
+        // Require at least 2 rows to be confident this really is a table paste (avoids
+        // misfiring on an unrelated snippet that happens to start with "1")
+        if (rows.length >= 2) {
+            return { type: 'table', data: { rows } };
+        }
+        return null;
+    }
+
+    // ────────────────────────────
+    // Quick Add: PC build component list ("Title ... 699 ευρώ" + Cpu/Board/Ram/... lines)
+    // ────────────────────────────
+    const PC_COMPONENT_LABELS = {
+        cpu: 'cpu', processor: 'cpu', επεξεργαστης: 'cpu',
+        board: 'motherboard', motherboard: 'motherboard', mb: 'motherboard', μητρικη: 'motherboard',
+        ram: 'ram', memory: 'ram', μνημη: 'ram',
+        cooler: 'cooler', cooling: 'cooler', ψυξη: 'cooler',
+        gpu: 'gpu', vga: 'gpu', graphics: 'gpu', καρταγραφικων: 'gpu',
+        case: 'case', κουτι: 'case',
+        psu: 'psu', τροφοδοτικο: 'psu',
+        ssd: 'storage', hdd: 'storage', nvme: 'storage', storage: 'storage', disk: 'storage', δισκος: 'storage',
+        os: 'os', windows: 'os', λειτουργικο: 'os',
+        fan: 'extra', fans: 'extra', ανεμιστηρας: 'extra', extra: 'extra'
+    };
+
+    function parsePcBuildTitleLine(line) {
+        const m = line.match(/^(.+?)\s+(\d+(?:[.,]\d+)?)\s*(?:€|eur|ευρω|ευρώ)\s*$/i);
+        if (!m) return null;
+        return { title: m[1].trim(), price: parseFloat(m[2].replace(',', '.')) };
+    }
+
+    function parsePcComponentLine(line) {
+        const m = line.match(/^([A-Za-zΑ-Ωα-ωΆ-Ώά-ώ]+):?\s+(.+)$/);
+        if (!m) return null;
+
+        const labelKey = normalizeGreekText(m[1]).replace(/[^a-zα-ω]/g, '');
+        const componentKey = PC_COMPONENT_LABELS[labelKey];
+        if (!componentKey) return null;
+
+        let value = m[2].trim();
+        let price = 0;
+
+        const priceMatch = value.match(/^(.+?)\s+(\d+(?:[.,]\d+)?)\s*€?$/);
+        if (priceMatch) {
+            value = priceMatch[1].trim();
+            price = parseFloat(priceMatch[2].replace(',', '.'));
+        }
+
+        return { componentKey, name: value, price };
+    }
+
+    function parsePcBuildFormat(lines) {
+        if (lines.length < 3) return null;
+
+        const titleInfo = parsePcBuildTitleLine(lines[0]);
+        if (!titleInfo) return null;
+
+        const components = {};
+        let matchedCount = 0;
+        let hasComponentPrices = false;
+
+        for (let i = 1; i < lines.length; i++) {
+            const parsed = parsePcComponentLine(lines[i]);
+            if (parsed) {
+                components[parsed.componentKey] = { name: parsed.name, price: parsed.price };
+                matchedCount++;
+                if (parsed.price > 0) hasComponentPrices = true;
+            }
+        }
+
+        // Require at least 2 recognized component lines to avoid misfiring on other pastes
+        if (matchedCount < 2) return null;
+
+        return {
+            type: 'pcbuild',
+            data: { title: titleInfo.title, totalPrice: titleInfo.price, components, hasComponentPrices }
+        };
+    }
+
     function parseSmartFormat(lines) {
         console.log('=== parseSmartFormat called ===');
         console.log('Lines:', lines);
@@ -2604,7 +2751,59 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
                 updatePreview();
             }, 100);
         }
-        
+        else if (parsed.type === 'table') {
+            // Each row of the pasted table becomes its own line item
+            const { rows } = parsed.data;
+
+            rows.forEach(row => {
+                addItem();
+                const newItem = items[items.length - 1];
+                if (!newItem) return;
+                const itemId = newItem.id;
+
+                window._updateItem(itemId, 'category', 'other');
+                window._updateItem(itemId, 'brand', row.description);
+                window._updateItem(itemId, 'quantity', row.quantity);
+                window._updateItem(itemId, 'price', row.unitPrice);
+            });
+
+            renderItems();
+            showToast(`✅ Προστέθηκαν ${rows.length} στοιχεία από τον πίνακα`);
+            updatePreview();
+        }
+        else if (parsed.type === 'pcbuild') {
+            // A pasted PC build (title + total, and/or Cpu/Board/Ram/... component lines)
+            const { title, totalPrice, components, hasComponentPrices } = parsed.data;
+
+            addItem();
+            const newItem = items[items.length - 1];
+            if (!newItem) {
+                console.error('No item found in items array!');
+                return;
+            }
+            const itemId = newItem.id;
+
+            window._updateItem(itemId, 'category', 'custompc');
+            if (title) window._updateItem(itemId, 'brand', title);
+
+            Object.entries(components).forEach(([key, comp]) => {
+                window._updatePCComponent(itemId, key, 'name', comp.name);
+                if (comp.price > 0) {
+                    window._updatePCComponent(itemId, key, 'price', comp.price);
+                }
+            });
+
+            if (!hasComponentPrices && totalPrice) {
+                // No per-component prices were given — apply the total straight to the item
+                const finalItem = items.find(i => i.id === itemId);
+                if (finalItem) finalItem.price = totalPrice;
+            }
+
+            renderItems();
+            showToast('✅ Custom PC προστέθηκε: ' + (title || ''));
+            updatePreview();
+        }
+
         // Close modal
         const modal = $('#quickAddModal');
         if (modal) modal.classList.remove('active');
