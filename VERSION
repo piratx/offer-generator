@@ -1,5 +1,5 @@
-VERSION=202609170115
-Fix Custom PC component-price alignment (now flush right, matching item/offer totals) and add breathing room around item titles
+VERSION=202609171200
+Fix grand-total alignment: the total amount now lines up under the net/VAT amounts instead of drifting left, and fixed a print-only bug that broke right-alignment of the whole totals block in the PDF/print output
 
-CURRENT VERSION: 202609170115
+CURRENT VERSION: 202609171200
 Date: 2026-09-17
