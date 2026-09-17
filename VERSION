@@ -1,5 +1,5 @@
-VERSION=202609161859
-Fix double-VAT on Custom PC items with per-component prices
+VERSION=202609170043
+Auto-detect PC parts in table-paste Quick Add (build one Custom PC item instead of separate line items)
 
-CURRENT VERSION: 202609161859
-Date: 2026-09-16
+CURRENT VERSION: 202609170043
+Date: 2026-09-17

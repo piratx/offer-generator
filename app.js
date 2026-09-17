@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202609161859';
+const VERSION = '202609170043';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
@@ -220,7 +220,11 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
     // ────────────────────────────
     async function loadVersion() {
         try {
-            const response = await fetch('VERSION');
+            // Cache-bust: unlike app.js/styles.css (which get a fresh ?t=/?v= on every
+            // deploy), this plain 'VERSION' fetch has no query string, so a stale edge/
+            // browser cache can serve an old file and show the wrong badge even once the
+            // real app.js is already the new version. VERSION is tiny, so busting it is free.
+            const response = await fetch('VERSION?t=' + Date.now());
             const text = await response.text();
             const versionMatch = text.match(/VERSION=(\d+)/);
             if (versionMatch) {
@@ -2209,7 +2213,15 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
 
         // Table paste: Α/Α | ΠΕΡΙΓΡΑΦΗ | ΠΟΣΟΤΗΤΑ | ΤΙΜΗ ΜΟΝΑΔΑΣ | ΣΥΝΟΛΟ (one cell per line, from copy-pasting a table)
         const tableResult = parseTableFormat(lines);
-        if (tableResult) return tableResult;
+        if (tableResult) {
+            // If most rows are clearly PC components (CPU, motherboard, RAM, storage, PSU,
+            // case, GPU, cooler...), treat this as a single Custom PC Build instead of
+            // separate line items — this is how a PC parts quote usually gets pasted from
+            // a table, with no Cpu:/Board:/Ram: labels to tell us so directly.
+            const pcBuildFromTable = tryConvertTableRowsToPcBuild(tableResult.data.rows);
+            if (pcBuildFromTable) return pcBuildFromTable;
+            return tableResult;
+        }
 
         // PC build list: "Title ... 699 ευρώ" followed by "Cpu ... / Ram ... / Gpu ..." component lines
         const pcBuildResult = parsePcBuildFormat(lines);
@@ -2282,6 +2294,61 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
             return { type: 'table', data: { rows } };
         }
         return null;
+    }
+
+    // A table paste with no Cpu:/Board:/Ram: labels still often IS a PC build — e.g. rows
+    // copied straight out of a supplier quote table. Recognize that shape by keyword-matching
+    // each row's description against the usual PC component categories.
+    const PC_PART_KEYWORD_PATTERNS = {
+        cpu: /\b(cpu|ryzen|core\s*i[3579]\b|core\s*ultra|threadripper|pentium|celeron|xeon|processor|επεξεργαστ\w*)\b/i,
+        motherboard: /\b(motherboard|mainboard|μητρικ\w*|chipset|socket|lga\s*\d+|am[45]\b|\b[abhxz]\d{3}m?\b)/i,
+        ram: /\b(ddr[345]\w*|memory|μνημ\w*|\bram\b|dimm|udimm|sodimm)\b/i,
+        storage: /\b(ssd|hdd|nvme|m\.2|sata|δισκ\w*|\bdisk\b)\b/i,
+        gpu: /\b(gpu|vga|graphics|geforce|radeon|\brtx\b|\bgtx\b|καρτ\w*\s*γραφικ\w*)\b/i,
+        psu: /\b(psu|power\s*supply|τροφοδοτικ\w*|\d+\s*w\b|80\s*(plus|bronze|gold|silver|platinum|titanium))\b/i,
+        case: /\b(\bcase\b|tower|κουτ\w*|chassis|\bmatx\b|\batx\b|\bitx\b)\b/i,
+        cooler: /\b(cooler|cooling|liquid\s*cool|\baio\b|air\s*cool|ψυξ\w*|ανεμιστηρ\w*|\bfan\b)\b/i,
+        os: /\b(windows|λειτουργικ\w*)\b/i
+    };
+
+    function detectPcComponentKey(description) {
+        for (const key of Object.keys(PC_PART_KEYWORD_PATTERNS)) {
+            if (PC_PART_KEYWORD_PATTERNS[key].test(description)) return key;
+        }
+        return null;
+    }
+
+    function tryConvertTableRowsToPcBuild(rows) {
+        const tagged = rows.map(row => ({ ...row, componentKey: detectPcComponentKey(row.description) }));
+        const matchedCount = tagged.filter(r => r.componentKey).length;
+
+        // Require both a decent hit rate AND a minimum of 3 recognized parts, so a small,
+        // unrelated table (e.g. just a case + a cable) doesn't get bundled into a fake build.
+        if (matchedCount < 3 || matchedCount / rows.length < 0.6) return null;
+
+        const components = {};
+        tagged.forEach(row => {
+            const key = row.componentKey || 'extra';
+            if (components[key]) {
+                // Slot already used (e.g. a second SSD) — fold it in rather than overwrite.
+                components[key] = {
+                    name: components[key].name + '; ' + row.description,
+                    price: components[key].price + row.unitPrice
+                };
+            } else {
+                components[key] = { name: row.description, price: row.unitPrice };
+            }
+        });
+
+        return {
+            type: 'pcbuild',
+            data: {
+                title: 'Custom PC Build',
+                totalPrice: null,
+                components,
+                hasComponentPrices: true
+            }
+        };
     }
 
     // ────────────────────────────
