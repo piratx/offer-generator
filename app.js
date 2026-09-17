@@ -4,7 +4,7 @@
    See VERSION file for current version info
    =========================== */
 
-const VERSION = '202609170043';
+const VERSION = '202609170115';
 
 const DEFAULT_COMPANY = {
     logo:           'https://macworks.gr/macworks-logo.png',
@@ -1693,6 +1693,16 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
             const showItemDetails = $('#showItemDetails')?.checked !== false;
             const showVATPerItem = $('#showVATPerItem')?.checked !== false;
 
+            // specsAreHTML items (currently: Custom PC) render each spec as its own
+            // name+price row. Nested inside .offer-item-content, that row's "right edge"
+            // is only the content column — .offer-item-price sits in a separate column
+            // to its right, so those per-component prices land ~100px short of the
+            // page's true right margin instead of lining up with the item's own total
+            // price above and the offer totals below. Render them as a full-width block
+            // below the card instead, indented to match where the title text starts.
+            const specsInsideContent = showItemDetails && specs.length > 0 && !specsAreHTML;
+            const specsFullWidth = showItemDetails && specs.length > 0 && specsAreHTML;
+
             return `
                 <div class="offer-item-card">
                     ${item.imageUrl ? `
@@ -1703,21 +1713,23 @@ console.log('✅ Burger Menu: ENABLED (FIXED!)');
                     <div class="offer-item-content">
                         <div class="offer-item-title">${escapeHtml(title)}</div>
                         ${subtitle ? `<div class="offer-item-subtitle">${escapeHtml(subtitle)}</div>` : ''}
-                        ${showItemDetails && specs.length > 0 ? (specsAreHTML ? 
-                            `<div class="offer-item-specs" style="list-style:none;padding:0">${specs.join('')}</div>` : 
-                            `<ul class="offer-item-specs">${specs.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>`
-                        ) : ''}
+                        ${specsInsideContent ?
+                            `<ul class="offer-item-specs">${specs.map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>` : ''
+                        }
                     </div>
                     <div class="offer-item-price">
                         <div class="offer-item-price-value">${formatCurrency(pricing.lineTotal)}</div>
-                        ${showVATPerItem ? (pricing.hasVAT ? 
-                            `<div class="offer-item-price-vat" style="font-size:8pt;color:var(--text-muted);margin-top:0.2rem;">συμπ. ΦΠΑ ${vatRate}%</div>` : 
+                        ${showVATPerItem ? (pricing.hasVAT ?
+                            `<div class="offer-item-price-vat" style="font-size:8pt;color:var(--text-muted);margin-top:0.2rem;">συμπ. ΦΠΑ ${vatRate}%</div>` :
                             `<div class="offer-item-price-vat" style="font-size:8pt;color:var(--text-muted);margin-top:0.2rem;">χωρίς ΦΠΑ</div>`
                         ) : ''}
                         ${item.discount > 0 ? `<div class="offer-item-price-discount">-${item.discount}%</div>` : ''}
                         ${item.quantity > 1 ? `<div class="offer-item-price-qty">x${item.quantity}</div>` : ''}
                     </div>
                 </div>
+                ${specsFullWidth ? `
+                    <div class="offer-item-specs offer-item-specs-full" style="list-style:none;padding:0;${item.imageUrl ? 'padding-left:95px;' : ''}">${specs.join('')}</div>
+                ` : ''}
             `;
         });
 

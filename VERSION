@@ -1,5 +1,5 @@
-VERSION=202609170043
-Auto-detect PC parts in table-paste Quick Add (build one Custom PC item instead of separate line items)
+VERSION=202609170115
+Fix Custom PC component-price alignment (now flush right, matching item/offer totals) and add breathing room around item titles
 
-CURRENT VERSION: 202609170043
+CURRENT VERSION: 202609170115
 Date: 2026-09-17

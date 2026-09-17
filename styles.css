@@ -963,7 +963,7 @@ body {
 .offer-item-card {
     display: flex;
     gap: 15px;
-    padding: 12px 0;
+    padding: 20px 0;
     border-bottom: 0.5px solid #eee;
 }
 
@@ -1003,7 +1003,7 @@ body {
     font-size: 11pt;
     font-weight: 500;
     color: #222;
-    margin-bottom: 2px;
+    margin-bottom: 6px;
 }
 
 .offer-item-subtitle {
@@ -1981,6 +1981,7 @@ body.night-mode.warm-night .offer-document {
 
     /* Avoid breaking inside items */
     .offer-item-card,
+    .offer-item-specs-full,
     .page2-section,
     .page2-signatory {
         page-break-inside: avoid !important;
